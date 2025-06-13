@@ -15,7 +15,7 @@ async def get_database() -> AsyncIOMotorDatabase:
 
 async def connect_to_mongo():
     """Create database connection"""
-    MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://nayankishorkute21:weakpassword@cluster1.qki4o.mongodb.net/?retryWrites=true&w=majority&appName=cluster1")
+    MONGO_URI = os.getenv("MONGO_URI")
     database.client = AsyncIOMotorClient(MONGO_URI)
     database.database = database.client.store_database
     
