@@ -1,16 +1,25 @@
 from fastapi import FastAPI
-from motor.motor_asyncio import AsyncIOMotorClient
-import os
 from dotenv import load_dotenv
+from app.db.dbconnect import connect_to_mongo, close_mongo_connection
+from app.api.store import app as store_router
 
 load_dotenv()
 
-app = FastAPI()
+app = FastAPI(title="Store Management API", version="1.0.0")
 
-# MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-# client = AsyncIOMotorClient(MONGO_URI)
-# db = client.mydatabase
+@app.on_event("startup")
+async def startup_event():
+    """Connect to database on startup"""
+    await connect_to_mongo()
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Close database connection on shutdown"""
+    await close_mongo_connection()
+
+# Include routers
+app.include_router(store_router, prefix="/api", tags=["stores"])
 
 @app.get("/")
 async def root():
-    return {"message": "FastAPI with MongoDB"}
+    return {"message": "Store Management API with MongoDB"}
