@@ -1,7 +1,7 @@
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson import ObjectId
 from typing import List, Optional
-from app.db.models.storeitem import Store, StoreCreate, StoreItem, ItemCreate, StoreUpdate
+from app.db.models.store import Store, StoreCreate, StoreItem, ItemCreate, StoreUpdate
 from datetime import datetime, timezone
 
 class StoreOperations:

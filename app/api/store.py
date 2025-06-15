@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
-from app.db.models.storeitem import Store, StoreCreate, ItemCreate, StoreUpdate
-from app.repository.crud import StoreOperations
+from app.db.models.store import Store, StoreCreate, ItemCreate, StoreUpdate
+from app.repository.store import StoreOperations
 from app.db.dbconnect import get_database
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from typing import List
