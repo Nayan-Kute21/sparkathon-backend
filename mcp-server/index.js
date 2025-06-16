@@ -315,6 +315,34 @@ class StoreManagementServer {
               properties: {},
             },
           },
+          {
+            name: "add_item_to_main_store",
+            description: "Add item to main store inventory",
+            inputSchema: {
+              type: "object",
+              properties: {
+                store_id: { type: "string", description: "Main store ID" },
+                item_name: { type: "string", description: "Name of the item" },
+                current_quantity: {
+                  type: "integer",
+                  description: "Current quantity",
+                },
+                max_quantity: {
+                  type: "integer",
+                  description: "Maximum capacity",
+                },
+                unit: { type: "string", description: "Unit of measurement" },
+                price: { type: "number", description: "Price per unit" },
+                category: { type: "string", description: "Item category" },
+              },
+              required: [
+                "store_id",
+                "item_name",
+                "current_quantity",
+                "max_quantity",
+              ],
+            },
+          },
 
           // Order Management Tools
           {
@@ -372,6 +400,51 @@ class StoreManagementServer {
               properties: {},
             },
           },
+          {
+            name: "get_order",
+            description: "Get order by ID",
+            inputSchema: {
+              type: "object",
+              properties: {
+                order_id: { type: "string", description: "Order ID" },
+              },
+              required: ["order_id"],
+            },
+          },
+          {
+            name: "update_order_status",
+            description: "Update order status",
+            inputSchema: {
+              type: "object",
+              properties: {
+                order_id: { type: "string", description: "Order ID" },
+                status: {
+                  type: "string",
+                  enum: [
+                    "pending",
+                    "processing",
+                    "shipped",
+                    "delivered",
+                    "cancelled",
+                  ],
+                  description: "New order status",
+                },
+                notes: { type: "string", description: "Additional notes" },
+              },
+              required: ["order_id"],
+            },
+          },
+          {
+            name: "process_order",
+            description: "Process an order and update inventory",
+            inputSchema: {
+              type: "object",
+              properties: {
+                order_id: { type: "string", description: "Order ID to process" },
+              },
+              required: ["order_id"],
+            },
+          },
         ],
       };
     });
@@ -385,19 +458,19 @@ class StoreManagementServer {
 
         // Check if FastAPI server is running
         try {
-          const healthCheck = await fetch(`${API_BASE_URL}/`, {
+          const healthCheck = await fetch(`http://localhost:8000/`, {
             method: "GET",
             timeout: 5000,
           });
-          // if (!healthCheck.ok) {
-          //   throw new Error("FastAPI server not responding");
-          // }
+          if (!healthCheck.ok) {
+            throw new Error("FastAPI server not responding");
+          }
         } catch (error) {
           return {
             content: [
               {
                 type: "text",
-                text: `Error: Cannot connect to FastAPI server at ${API_BASE_URL}. Please ensure the server is running with: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`,
+                text: `Error: Cannot connect to FastAPI server at http://localhost:8000. Please ensure the server is running with: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`,
               },
             ],
             isError: true,
@@ -405,69 +478,106 @@ class StoreManagementServer {
         }
 
         switch (name) {
-          // Store Management
+          // Store Management - Using correct API endpoints
           case "create_store":
-            response = await this.callMCPDispatch("create_store", args);
+            response = await this.callAPI("/stores/", "POST", args);
             break;
 
           case "get_store":
-            response = await this.callMCPDispatch("get_store", args);
+            response = await this.callAPI(`/stores/${args.store_id}`, "GET");
             break;
 
           case "get_all_stores":
-            response = await this.callMCPDispatch("get_all_stores", {});
+            response = await this.callAPI("/stores/", "GET");
             break;
 
           case "add_item_to_store":
             const { store_id, ...itemData } = args;
-            response = await this.callMCPDispatch("add_item_to_store", {
-              store_id,
-              item: itemData,
-            });
+            response = await this.callAPI(
+              `/stores/${store_id}/items/`,
+              "POST",
+              itemData
+            );
             break;
 
           case "add_multiple_items_to_store":
-            response = await this.callMCPDispatch(
-              "add_multiple_items_to_store",
-              args
+            response = await this.callAPI(
+              `/stores/${args.store_id}/items/bulk/`,
+              "POST",
+              args.items
             );
             break;
 
           case "update_item_quantity":
-            response = await this.callMCPDispatch("update_item_quantity", args);
+            response = await this.callAPI(
+              `/stores/${args.store_id}/items/${args.item_name}/quantity/`,
+              "PUT",
+              null,
+              {
+                new_quantity: args.new_quantity,
+              }
+            );
             break;
 
           case "update_store_conditions":
             const { store_id: storeId, ...conditions } = args;
-            response = await this.callMCPDispatch("update_store_conditions", {
-              store_id: storeId,
-              conditions,
-            });
-            break;
-
-          // Main Store Management - Direct API calls
-          case "create_main_store":
-            response = await this.callDirectAPI("/mainstore/", "POST", args);
-            break;
-
-          case "get_main_store":
-            response = await this.callDirectAPI(
-              `/mainstore/${args.store_id}`,
-              "GET"
+            response = await this.callAPI(
+              `/stores/${storeId}/conditions/`,
+              "PUT",
+              conditions
             );
             break;
 
+          // Main Store Management
+          case "create_main_store":
+            response = await this.callAPI("/mainstore/", "POST", args);
+            break;
+
+          case "get_main_store":
+            response = await this.callAPI(`/mainstore/${args.store_id}`, "GET");
+            break;
+
           case "get_all_main_stores":
-            response = await this.callDirectAPI("/mainstore/", "GET");
+            response = await this.callAPI("/mainstore/", "GET");
+            break;
+
+          case "add_item_to_main_store":
+            const { store_id: mainStoreId, ...mainItemData } = args;
+            response = await this.callAPI(
+              `/mainstore/${mainStoreId}/items/`,
+              "POST",
+              mainItemData
+            );
             break;
 
           // Order Management
           case "create_order":
-            response = await this.callDirectAPI("/orders/", "POST", args);
+            response = await this.callAPI("/orders/", "POST", args);
             break;
 
           case "get_all_orders":
-            response = await this.callDirectAPI("/orders/", "GET");
+            response = await this.callAPI("/orders/", "GET");
+            break;
+
+          case "get_order":
+            response = await this.callAPI(`/orders/${args.order_id}`, "GET");
+            break;
+
+          case "update_order_status":
+            const { order_id, ...statusData } = args;
+            response = await this.callAPI(
+              `/orders/${order_id}/status/`,
+              "PUT",
+              statusData
+            );
+            break;
+
+          case "process_order":
+            response = await this.callAPI(
+              `/orders/${args.order_id}/process/`,
+              "POST",
+              {}
+            );
             break;
 
           default:
@@ -497,32 +607,16 @@ class StoreManagementServer {
     });
   }
 
-  async callMCPDispatch(action, params) {
-    const mcpRequest = {
-      action,
-      params,
-      request_id: `mcp_${Date.now()}`,
-    };
+  async callAPI(endpoint, method = "GET", body = null, queryParams = null) {
+    let url = `${API_BASE_URL}${endpoint}`;
 
-    const response = await fetch(`${API_BASE_URL}/mcp_dispatch/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(mcpRequest),
-      timeout: 30000,
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`MCP Dispatch Error (${response.status}): ${errorText}`);
+    // Add query parameters if provided
+    if (queryParams && method === "PUT" && endpoint.includes("/quantity/")) {
+      // For quantity updates, we need to pass new_quantity as query param
+      const params = new URLSearchParams(queryParams);
+      url += `?${params.toString()}`;
     }
 
-    return await response.json();
-  }
-
-  async callDirectAPI(endpoint, method = "GET", body = null) {
-    const url = `${API_BASE_URL}${endpoint}`;
     const options = {
       method,
       headers: {
