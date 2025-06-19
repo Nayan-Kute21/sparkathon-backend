@@ -18,6 +18,11 @@ class StoreOperations:
         
         result = await self.collection.insert_one(store_dict)
         return str(result.inserted_id)
+    
+    async def delete_store(self, store_id: str) -> bool:
+        """Delete a store by its ID"""
+        result = await self.db["stores"].delete_one({"_id": ObjectId(store_id)})
+        return result.deleted_count == 1
 
     async def get_store(self, store_id: str) -> Optional[dict]:
         """Get store by ID"""

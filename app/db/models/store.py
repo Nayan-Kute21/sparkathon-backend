@@ -62,6 +62,9 @@ class Store(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+    latitude: float = Field(..., description="Latitude of the store location")
+    longitude: float = Field(..., description="Longitude of the store location")
+
 class StoreCreate(BaseModel):
     store_name: str
     store_address: str
@@ -76,6 +79,8 @@ class StoreCreate(BaseModel):
     political_notes: Optional[str] = None
     environmental_issues: Optional[SeverityLevel] = None
     environmental_notes: Optional[str] = None
+    latitude: float
+    longitude: float
 
 class StoreUpdate(BaseModel):
     store_name: Optional[str] = None
@@ -93,6 +98,8 @@ class StoreUpdate(BaseModel):
     environmental_issues: Optional[SeverityLevel] = None
     environmental_notes: Optional[str] = None
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
 class ItemCreate(BaseModel):
     item_name: str

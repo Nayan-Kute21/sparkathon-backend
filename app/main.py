@@ -3,9 +3,19 @@ from dotenv import load_dotenv
 from app.db.dbconnect import connect_to_mongo, close_mongo_connection
 from app.api.store import app as store_router
 from app.api.mainstore import app as mainstore_router
+from fastapi.middleware.cors import CORSMiddleware
 load_dotenv()
 
 app = FastAPI(title="Store Management API", version="1.0.0")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.on_event("startup")
 async def startup_event():

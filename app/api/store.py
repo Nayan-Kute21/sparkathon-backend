@@ -62,3 +62,11 @@ async def update_store_conditions(store_id: str, conditions: StoreUpdate, store_
     if not success:
         raise HTTPException(status_code=404, detail="Store not found")
     return {"message": "Store conditions updated successfully"}
+
+@app.delete("/stores/{store_id}")
+async def delete_store(store_id: str, store_ops: StoreOperations = Depends(get_store_operations)):
+    """Delete a store by ID"""
+    success = await store_ops.delete_store(store_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Store not found")
+    return {"message": "Store deleted successfully"}
