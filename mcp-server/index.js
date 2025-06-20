@@ -64,6 +64,14 @@ class StoreManagementServer {
                 },
                 store_address: { type: "string", description: "Store address" },
                 owner_name: { type: "string", description: "Store owner name" },
+                latitude: {
+                  type: "number",
+                  description: "Latitude of the store location",
+                },
+                longitude: {
+                  type: "number",
+                  description: "Longitude of the store location",
+                },
                 store_phone: {
                   type: "string",
                   description: "Store phone number (optional)",
@@ -104,7 +112,13 @@ class StoreManagementServer {
                   description: "Environmental notes",
                 },
               },
-              required: ["store_name", "store_address", "owner_name"],
+              required: [
+                "store_name",
+                "store_address",
+                "owner_name",
+                "latitude",
+                "longitude",
+              ],
             },
           },
           {
@@ -246,6 +260,20 @@ class StoreManagementServer {
                 environmental_notes: {
                   type: "string",
                   description: "Environmental notes",
+                },
+              },
+              required: ["store_id"],
+            },
+          },
+          {
+            name: "delete_store",
+            description: "Delete a store by ID",
+            inputSchema: {
+              type: "object",
+              properties: {
+                store_id: {
+                  type: "string",
+                  description: "Store ID to delete",
                 },
               },
               required: ["store_id"],
@@ -440,7 +468,10 @@ class StoreManagementServer {
             inputSchema: {
               type: "object",
               properties: {
-                order_id: { type: "string", description: "Order ID to process" },
+                order_id: {
+                  type: "string",
+                  description: "Order ID to process",
+                },
               },
               required: ["order_id"],
             },
@@ -526,6 +557,10 @@ class StoreManagementServer {
               "PUT",
               conditions
             );
+            break;
+
+          case "delete_store":
+            response = await this.callAPI(`/stores/${args.store_id}`, "DELETE");
             break;
 
           // Main Store Management
