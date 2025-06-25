@@ -7,9 +7,12 @@ name = "pypi"
 fastapi = "*"
 uvicorn = "*"
 motor = "*"
+pydantic = "*"
+pymongo = "*"
+python-dotenv = "*"
+email-validator = "*"
 
 [dev-packages]
-python-dotenv = "*"
 
 [requires]
 python_version = "3.10"
